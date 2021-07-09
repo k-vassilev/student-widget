@@ -65,31 +65,73 @@ class Ob_Student_Widget extends WP_Widget {
 
     public function form( $instance ){
 
-        echo 'No options so far';
+        // PART 1: Extract the data from the instance variable
+     $instance = wp_parse_args( (array) $instance, array( 'posts_per_page' => '' ) );
+     $posts_per_page = $instance['posts_per_page'];
+     $student_status = $instance['student_status'];   
+
+     // PART 2-3: Display the fields
+     ?>
+     <!-- PART 2: Widget Posts per page field START -->
+     <p>
+      <label for="<?php echo $this->get_field_id('posts_per_page'); ?>">Posts per page: 
+        <input class="widefat" id="<?php echo $this->get_field_id('posts_per_page'); ?>" 
+               name="<?php echo $this->get_field_name('posts_per_page'); ?>" type="text" 
+               value="<?php echo attribute_escape($posts_per_page); ?>" />
+      </label>
+      </p>
+      <!-- Widget Posts per page field END -->
+
+     <!-- PART 3: Widget Student Status field START -->
+     <p>
+      <label for="<?php echo $this->get_field_id('text'); ?>">Active / inactive: 
+        <select class='widefat' id="<?php echo $this->get_field_id('student_status'); ?>"
+                name="<?php echo $this->get_field_name('student_status'); ?>" type="text">
+          <option value='active'<?php echo ($student_status=='active')?'selected':''; ?>>
+            Active
+          </option>
+          <option value='inactive'<?php echo ($student_status=='inactive')?'selected':''; ?>>
+            Inactive
+          </option> 
+        </select>                
+      </label>
+     </p>
+     <!-- Widget Student Status field END -->
+     <?php 
 
     }
-
-
-
 
     // Front-End
 
     public function widget( $args, $instance ){
 
         
-        $students_per_page = 4;
+        // PART 1: Extracting the arguments + getting the values
+        extract($args, EXTR_SKIP);
+        $posts_per_page = empty($instance['posts_per_page']) ? ' ' : apply_filters('widget_title', $instance['posts_per_page']);
+        $student_status = empty($instance['student_status']) ? '' : $instance['student_status'];
         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
-        $loop = new WP_Query( array( 
-					'post_type' => 'student', 
-					'posts_per_page' => $students_per_page,
-					'paged' => $paged,
-					'meta_key' => '_is_active_student',
-					'meta_value'=> 'true'
-					) ); 
-            
 
+        if($student_status == 'active'){
+            $loop = new WP_Query( array( 
+                'post_type' => 'student', 
+                'posts_per_page' => $posts_per_page,
+                'paged' => $paged,
+                'meta_key' => '_is_active_student',
+                'meta_value'=> 'true'
+                ) ); 
+        }else if($student_status == 'inactive'){
+            $loop = new WP_Query( array( 
+                'post_type' => 'student', 
+                'posts_per_page' => $posts_per_page,
+                'paged' => $paged,
+                'meta_key' => '_is_active_student',
+                'meta_value'=> 'false'
+                ) ); 
+        }
+        
 
-        echo $args['before_widget'];
+        echo (isset($before_widget)?$before_widget:'');
 
         if ( have_posts($loop) ){
             while ( $loop -> have_posts() ) : $loop -> the_post();?>
@@ -100,17 +142,11 @@ class Ob_Student_Widget extends WP_Widget {
                 <?php echo get_post_meta(get_the_ID(),'_student_class_value_key')[0];?>
             </div><?php
 
-
             endwhile;
         }
 
-
-        echo $args['after_widget'];
+        echo (isset($after_widget)?$after_widget:'');
     }
-
-
-
-
 }
 
 
